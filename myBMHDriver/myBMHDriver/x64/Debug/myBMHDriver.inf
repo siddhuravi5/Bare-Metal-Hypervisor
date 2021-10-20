@@ -1,0 +1,87 @@
+;
+; myBMHDriver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=myBMHDriver.cat
+DriverVer = 10/16/2021,15.25.50.854
+PnpLockDown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+myBMHDriver_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+myBMHDriver.sys  = 1,,
+WdfCoInstaller01009.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTamd64
+
+[Standard.NTamd64]
+%myBMHDriver.DeviceDesc%=myBMHDriver_Device, Root\myBMHDriver ; TODO: edit hw-id
+
+[myBMHDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+myBMHDriver.sys
+
+;-------------- Service installation
+[myBMHDriver_Device.NT.Services]
+AddService = myBMHDriver,%SPSVCINST_ASSOCSERVICE%, myBMHDriver_Service_Inst
+
+; -------------- myBMHDriver driver install sections
+[myBMHDriver_Service_Inst]
+DisplayName    = %myBMHDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\myBMHDriver.sys
+
+;
+;--- myBMHDriver_Device Coinstaller installation ------
+;
+
+[myBMHDriver_Device.NT.CoInstallers]
+AddReg=myBMHDriver_Device_CoInstaller_AddReg
+CopyFiles=myBMHDriver_Device_CoInstaller_CopyFiles
+
+[myBMHDriver_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01009.dll,WdfCoInstaller"
+
+[myBMHDriver_Device_CoInstaller_CopyFiles]
+WdfCoInstaller01009.dll
+
+[myBMHDriver_Device.NT.Wdf]
+KmdfService =  myBMHDriver, myBMHDriver_wdfsect
+[myBMHDriver_wdfsect]
+KmdfLibraryVersion = 1.9
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "myBMHDriver Installation Disk"
+myBMHDriver.DeviceDesc = "myBMHDriver Device"
+myBMHDriver.SVCDESC = "myBMHDriver Service"
