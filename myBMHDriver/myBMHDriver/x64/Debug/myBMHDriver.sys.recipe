@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>E:\BareMetalHypervisor\myBMHDriver\x64\Debug\myBMHDriver.sys</FullPath>
+      <FullPath>E:\Final Year Project\BareMetalHypervisor\myBMHDriver\x64\Debug\myBMHDriver.sys</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

@@ -144,25 +144,36 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
     </Link>
+    <DriverSign>
+      <FileDigestAlgorithm>SHA1</FileDigestAlgorithm>
+    </DriverSign>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <Inf Include="myBMHDriver.inf" />
-  </ItemGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.c" />
+    <ClCompile Include="EPT.c" />
+    <ClCompile Include="LogicalProcessor.c" />
+    <ClCompile Include="BMHDriver.c" />
+    <ClCompile Include="Memory.c" />
+    <ClCompile Include="VMX.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source.h" />
+    <ClInclude Include="CPU.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="EPT.h" />
+    <ClInclude Include="MSR.h" />
+    <ClInclude Include="BMHDriver.h" />
+    <ClInclude Include="VMX.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="Assembly.asm" />
+    <MASM Include="VirtualMachineExitHandler.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
