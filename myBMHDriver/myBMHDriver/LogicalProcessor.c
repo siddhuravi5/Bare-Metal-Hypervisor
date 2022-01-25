@@ -2,8 +2,7 @@
 #include <wdf.h>
 #include <wdm.h>
 #include "MSR.h"
-#include "CPU.h"
-#include "Common.h"
+#include "BMHDriver_CPU.h"
 
 
 int power(int base, int exp) {
@@ -47,7 +46,7 @@ void Run_On_Each_Logical_Processor(void* (*FunctionPtr)()) {
 }
 
 
-BOOLEAN Is_VMX_Supported()
+BOOLEAN Check_VMX_Support()
 {
 	CPUID data = { 0 };
 
@@ -68,7 +67,7 @@ BOOLEAN Is_VMX_Supported()
 	}
 	else if (Control.Fields.EnableVmxon == FALSE)
 	{
-		DbgPrint("[*] VMX locked off in BIOS\n");
+		DbgPrint("VMX is locked off in BIOS\n");
 		return FALSE;
 	}
 

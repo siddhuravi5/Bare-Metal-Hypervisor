@@ -1,4 +1,4 @@
-PUBLIC Enable_VMX_Operation
+PUBLIC Enable_VMX_Operation_asm
 PUBLIC Breakpoint
 PUBLIC STI_Instruction
 PUBLIC CLI_Instruction
@@ -16,12 +16,12 @@ PUBLIC Get_IDT_Base
 PUBLIC Get_GDT_Limit
 PUBLIC Get_IDT_Limit
 PUBLIC Get_RFLAGS
-PUBLIC Restore_To_VMXOFF_State
-PUBLIC Save_VMXOFF_State
+PUBLIC Restore_To_VMXOFF_State_asm
+PUBLIC Save_VMXOFF_State_asm
 PUBLIC __load_ar
 
-EXTERN g_StackPointerForReturning:QWORD
-EXTERN g_BasePointerForReturning:QWORD
+EXTERN global_StackPointerForReturning:QWORD
+EXTERN global_BasePointerForReturning:QWORD
 
 
 .code _text
@@ -33,7 +33,7 @@ EXTERN g_BasePointerForReturning:QWORD
     VMX_ERROR_CODE_FAILED               = 2
 ;------------------------------------------------------------------------
 
-Enable_VMX_Operation PROC PUBLIC
+Enable_VMX_Operation_asm PROC PUBLIC
 push rax			; Save the state
 
 xor rax,rax			; Clear the RAX
@@ -43,7 +43,7 @@ mov cr4,rax
 
 pop rax				; Restore the state
 ret
-Enable_VMX_Operation ENDP
+Enable_VMX_Operation_asm ENDP
 
 ;------------------------------------------------------------------------
      
@@ -67,12 +67,12 @@ ret
 CLI_Instruction ENDP 
 ;------------------------------------------------------------------------
 
-Restore_To_VMXOFF_State PROC PUBLIC
+Restore_To_VMXOFF_State_asm PROC PUBLIC
 
 VMXOFF  ; turn it off before exiting
 
-MOV rsp, g_StackPointerForReturning
-MOV rbp, g_BasePointerForReturning
+MOV rsp, global_StackPointerForReturning
+MOV rbp, global_BasePointerForReturning
 
 ; make rsp point to a correct return point
 ADD rsp,8
@@ -90,16 +90,16 @@ pop     rdi
 
 ret
 
-Restore_To_VMXOFF_State ENDP 
+Restore_To_VMXOFF_State_asm ENDP 
 
 ;------------------------------------------------------------------------
 
-Save_VMXOFF_State PROC PUBLIC
-MOV g_StackPointerForReturning,rsp
-MOV g_BasePointerForReturning,rbp
+Save_VMXOFF_State_asm PROC PUBLIC
+MOV global_StackPointerForReturning,rsp
+MOV global_BasePointerForReturning,rbp
 ret
 
-Save_VMXOFF_State ENDP 
+Save_VMXOFF_State_asm ENDP 
 
 ;------------------------------------------------------------------------
 INVEPT_Instruction PROC PUBLIC

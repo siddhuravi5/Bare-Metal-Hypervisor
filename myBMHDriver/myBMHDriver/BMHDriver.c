@@ -1,10 +1,8 @@
 #include <ntddk.h>
 #include <wdf.h>
 #include <wdm.h>
-#include "BMHDriver.h"
-#include "CPU.h"
+#include "BMHDriver_CPU.h"
 #include "MSR.h"
-#include "Common.h"
 #include "VMX.h"
 
 
@@ -13,10 +11,11 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
 	NTSTATUS NtStatus = STATUS_SUCCESS;
 	UINT64 uiIndex = 0;
 	PDEVICE_OBJECT pDeviceObject = NULL;
+
 	//the lowercase prefix represnts the type, us - unicode_string
 	UNICODE_STRING usDriverName, usDosDeviceName;
 
-	DbgPrint("[*] My BMH Driver Entry Called\n");
+	DbgPrint("My BMH Driver Entry Called\n");
 
 	RtlInitUnicodeString(&usDriverName, L"\\Device\\MyBMHDevice");
 
@@ -29,45 +28,45 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
 
 	if (NtStatus!= STATUS_SUCCESS)
 	{
-		DbgPrint("[*] There was some errors in creating device.\n");
+		DbgPrint("Error creating the device.\n");
 		return NtStatus;
 	}
 
 	for (uiIndex = 0; uiIndex < IRP_MJ_MAXIMUM_FUNCTION; uiIndex++) {
-		pDriverObject->MajorFunction[uiIndex] = DrvUnsupported;
+		pDriverObject->MajorFunction[uiIndex] = UnsupportedDriver;
 	}
 
-	DbgPrint("Setting the major functions for the driver\n");
+	DbgPrint("Setting the major functions for our BMH driver\n");
 
-	pDriverObject->MajorFunction[IRP_MJ_CREATE] = DrvCreate;
-	pDriverObject->MajorFunction[IRP_MJ_CLOSE] = DrvClose;
-	pDriverObject->MajorFunction[IRP_MJ_WRITE] = DrvWrite;
-	pDriverObject->MajorFunction[IRP_MJ_READ] = DrvRead;
-	pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DrvIOCTLDispatcher;
+	pDriverObject->MajorFunction[IRP_MJ_CREATE] = CreateDriver;
+	pDriverObject->MajorFunction[IRP_MJ_CLOSE] = CloseDriver;
+	pDriverObject->MajorFunction[IRP_MJ_WRITE] = WriteDriver;
+	pDriverObject->MajorFunction[IRP_MJ_READ] = ReadDriver;
+	pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IOCTLDispatcherDriver;
 
-	pDriverObject->DriverUnload = DrvUnload;
+	pDriverObject->DriverUnload = UnloadDriver;
 	IoCreateSymbolicLink(&usDosDeviceName, &usDriverName);
 
 	__try
 	{
 
 		// Initiating EPTP and VMX
-		PEPTP EPTP = Initialize_EPTP();
-		Initiate_VMX();
+		PEPTP EPTP = EPTP_Initialize();
+		VMX_Initiate();
 
 		//create guest code, our guest VM
-		//it is 100*
+		//it was 100*
+		//10 is the number of pages
 		for (size_t i = 0; i < (10 * PAGE_SIZE) - 1; i++)
 		{
 			void* TempAsm = "\xF4";
 			memcpy((void *)(VirtualGuestMemoryAddress + i), TempAsm, 1);
 
 		}
-
 		// Launching VM for Test (in the 0th virtual processor)
 		int ProcessorID = 0;
 
-		LaunchVM(ProcessorID, EPTP);
+		VM_Launch(ProcessorID, EPTP);
 		DbgPrint("Guest VM Launched and exited successfully\n");
 
 	}
@@ -78,22 +77,20 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
 	return NtStatus;
 }
 
-VOID DrvUnload(PDRIVER_OBJECT  DriverObject)
+VOID UnloadDriver(PDRIVER_OBJECT  DriverObject)
 {
 	UNICODE_STRING usDosDeviceName;
-	DbgPrint("[*] Drver Unload Called.\n");
+	DbgPrint("Unloading the driver\n");
 	RtlInitUnicodeString(&usDosDeviceName, L"\\DosDevices\\MyBMHDevice");
 	IoDeleteSymbolicLink(&usDosDeviceName);
 	IoDeleteDevice(DriverObject->DeviceObject);
 
 }
 
-NTSTATUS DrvCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS CreateDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
 
-	DbgPrint("[*] Drver Create Called !\n");
-
-
+	DbgPrint("Create Driver\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -102,9 +99,9 @@ NTSTATUS DrvCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS DrvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS ReadDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	DbgPrint("[*] Not implemented yet :( !\n");
+	DbgPrint("Not implemented yet\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -113,9 +110,9 @@ NTSTATUS DrvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS DrvWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS WriteDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	DbgPrint("[*] Not implemented yet :( ! \n");
+	DbgPrint("Not implemented yet :( ! \n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -124,12 +121,12 @@ NTSTATUS DrvWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS DrvClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS CloseDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	DbgPrint("[*] Drviver Close Called ! \n");
+	DbgPrint("Drviver Close Called ! \n");
 
 	// executing VMXOFF on every logical processor
-	Terminate_VMX();
+	VMX_Terminate();
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -139,9 +136,9 @@ NTSTATUS DrvClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 }
 
 
-NTSTATUS DrvUnsupported(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS UnsupportedDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	DbgPrint("[*] This function is not supported :( ! \n");
+	DbgPrint("This function is not supported :( ! \n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -151,7 +148,7 @@ NTSTATUS DrvUnsupported(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 }
 
 
-NTSTATUS DrvIOCTLDispatcher(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS IOCTLDispatcherDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 /*++
 Routine Description:
@@ -592,31 +589,5 @@ VOID PrintIrpInfo(PIRP Irp)
 	DbgPrint("\tirpSp->Parameters.DeviceIoControl.OutputBufferLength = %d\n",
 		irpSp->Parameters.DeviceIoControl.OutputBufferLength);
 	DbgPrint("\n");
-	return;
-}
-
-VOID PrintChars(_In_reads_(CountChars) PCHAR BufferAddress, _In_ size_t CountChars)
-{
-	PAGED_CODE();
-
-	if (CountChars) {
-
-		while (CountChars--) {
-
-			if (*BufferAddress > 31
-				&& *BufferAddress != 127) {
-
-				KdPrint(("%c", *BufferAddress));
-
-			}
-			else {
-
-				KdPrint(("."));
-
-			}
-			BufferAddress++;
-		}
-		KdPrint(("\n"));
-	}
 	return;
 }

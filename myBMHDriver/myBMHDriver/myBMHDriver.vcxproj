@@ -164,11 +164,9 @@
     <ClCompile Include="VMX.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CPU.h" />
-    <ClInclude Include="Common.h" />
     <ClInclude Include="EPT.h" />
     <ClInclude Include="MSR.h" />
-    <ClInclude Include="BMHDriver.h" />
+    <ClInclude Include="BMHDriver_CPU.h" />
     <ClInclude Include="VMX.h" />
   </ItemGroup>
   <ItemGroup>

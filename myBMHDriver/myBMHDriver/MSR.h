@@ -77,7 +77,8 @@ typedef union _IA32_VMX_BASIC_MSR
 	} Fields;
 } IA32_VMX_BASIC_MSR, * PIA32_VMX_BASIC_MSR;
 
-//debug test
+//debug test (fixed now)
+
 union __vmx_basic_msr_t
 {
 	unsigned __int64 control;
@@ -104,6 +105,7 @@ union __vmx_true_control_settings_t
 		unsigned __int32 allowed_1_settings;
 	};
 };
+
 
 typedef union _MSR
 {

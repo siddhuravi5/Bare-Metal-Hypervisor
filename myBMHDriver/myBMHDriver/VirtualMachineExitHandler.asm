@@ -1,12 +1,12 @@
-PUBLIC VMExitHandler
+PUBLIC VM_Exit_Handler_asm
 
 
-EXTERN MainVMExitHandler:PROC
+EXTERN Main_VM_Exit_Handler:PROC
 EXTERN VM_Resumer:PROC
 
 .code _text
 
-VMExitHandler PROC
+VM_Exit_Handler_asm PROC
 
     push r15
     push r14
@@ -30,7 +30,7 @@ VMExitHandler PROC
 	sub	rsp, 28h
 
 	;rdtsc
-	call	MainVMExitHandler
+	call	Main_VM_Exit_Handler
 	add	rsp, 28h	
 
 
@@ -56,6 +56,6 @@ VMExitHandler PROC
 	JMP VM_Resumer
 	
 
-VMExitHandler ENDP
+VM_Exit_Handler_asm ENDP
 
 end

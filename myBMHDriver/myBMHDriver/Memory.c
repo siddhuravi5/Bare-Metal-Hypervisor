@@ -2,8 +2,7 @@
 #include <wdf.h>
 #include <wdm.h>
 #include "MSR.h"
-#include "CPU.h"
-#include "Common.h"
+#include "BMHDriver_CPU.h"
 #include "VMX.h"
 
 #define ALIGNMENT_PAGE_SIZE   4096
@@ -45,7 +44,7 @@ BOOLEAN Allocate_VMXON_Region(IN PVirtualMachineState vmState)
 	//BYTE* Buffer = MmAllocateContiguousMemorySpecifyCache(VMXONSize + ALIGNMENT_PAGE_SIZE, Lowest, Highest, Lowest, MmNonCached);
 
 	if (Buffer == NULL) {
-		DbgPrint("[*] Error : Couldn't Allocate Buffer for VMXON Region. \n");
+		DbgPrint("Error Allocating Buffer for VMXON Region. \n");
 		return FALSE;// ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 	}
 	UINT64 PhysicalBuffer = VirtualAddress_to_PhysicalAddress(Buffer);
@@ -56,9 +55,9 @@ BOOLEAN Allocate_VMXON_Region(IN PVirtualMachineState vmState)
 
 	UINT64 alignedVirtualBuffer = ((ULONG_PTR)(Buffer + ALIGNMENT_PAGE_SIZE - 1) & ~(ALIGNMENT_PAGE_SIZE - 1));
 
-	DbgPrint("[*] Virtual allocated buffer for VMXON at %llx \n", Buffer);
-	DbgPrint("[*] Virtual aligned allocated buffer for VMXON at %llx \n", alignedVirtualBuffer);
-	DbgPrint("[*] Aligned physical buffer allocated for VMXON at %llx \n", alignedPhysicalBuffer);
+	DbgPrint("Virtual allocated buffer for VMXON is at %llx \n", Buffer);
+	DbgPrint("Virtual aligned allocated buffer for VMXON is at %llx \n", alignedVirtualBuffer);
+	DbgPrint("Aligned physical buffer allocated for VMXON is at %llx \n", alignedPhysicalBuffer);
 
 	// get IA32_VMX_BASIC_MSR RevisionId
 
@@ -67,7 +66,7 @@ BOOLEAN Allocate_VMXON_Region(IN PVirtualMachineState vmState)
 
 	basic.All = __readmsr(MSR_IA32_VMX_BASIC);
 
-	DbgPrint("[*] MSR_IA32_VMX_BASIC (MSR 0x480) Revision Identifier %llx \n", basic.Fields.RevisionIdentifier);
+	DbgPrint("MSR_IA32_VMX_BASIC (MSR 0x480) Revision Identifier %llx \n", basic.Fields.RevisionIdentifier);
 
 	//Changing Revision Identifier
 	*(UINT64*)alignedVirtualBuffer = basic.Fields.RevisionIdentifier;
@@ -76,7 +75,7 @@ BOOLEAN Allocate_VMXON_Region(IN PVirtualMachineState vmState)
 	int status = __vmx_on(&alignedPhysicalBuffer);
 	if (status)
 	{
-		DbgPrint("[*] VMXON failed with status %d\n", status);
+		DbgPrint("VMXON failed with status %d\n", status);
 		return FALSE;
 	}
 
@@ -106,7 +105,7 @@ BOOLEAN Allocate_VMCS_Region(IN PVirtualMachineState vmState)
 
 	UINT64 PhysicalBuffer = VirtualAddress_to_PhysicalAddress(Buffer);
 	if (Buffer == NULL) {
-		DbgPrint("[*] Error : Couldn't Allocate Buffer for VMCS Region. \n");
+		DbgPrint("Error allocating Buffer for VMCS Region. \n");
 		return FALSE;// ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 	}
 	// zero-out memory 
@@ -117,9 +116,9 @@ BOOLEAN Allocate_VMCS_Region(IN PVirtualMachineState vmState)
 
 
 
-	DbgPrint("[*] Virtual allocated buffer for VMCS at %llx \n", Buffer);
-	DbgPrint("[*] Virtual aligned allocated buffer for VMCS at %llx \n", alignedVirtualBuffer);
-	DbgPrint("[*] Aligned physical buffer allocated for VMCS at %llx \n", alignedPhysicalBuffer);
+	DbgPrint("Virtual allocated buffer for VMCS is at %llx \n", Buffer);
+	DbgPrint("Virtual aligned allocated buffer for VMCS is at %llx \n", alignedVirtualBuffer);
+	DbgPrint("Aligned physical buffer allocated for VMCS is at %llx \n", alignedPhysicalBuffer);
 
 	// get IA32_VMX_BASIC_MSR RevisionId
 
@@ -128,7 +127,7 @@ BOOLEAN Allocate_VMCS_Region(IN PVirtualMachineState vmState)
 
 	basic.All = __readmsr(MSR_IA32_VMX_BASIC);
 
-	DbgPrint("[*] MSR_IA32_VMX_BASIC (MSR 0x480) Revision Identifier %llx \n", basic.Fields.RevisionIdentifier);
+	DbgPrint("MSR_IA32_VMX_BASIC (MSR 0x480) Revision Identifier %llx \n", basic.Fields.RevisionIdentifier);
 
 
 	//Changing Revision Identifier
@@ -138,7 +137,7 @@ BOOLEAN Allocate_VMCS_Region(IN PVirtualMachineState vmState)
 	int status = __vmx_vmptrld(&alignedPhysicalBuffer);
 	if (status)
 	{
-		DbgPrint("[*] VMCS failed with status %d\n", status);
+		DbgPrint("VMCS failed with status %d\n", status);
 		return FALSE;
 	}
 

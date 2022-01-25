@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 // See Table 24-8. Format of Extended-Page-Table Pointer
 typedef union _EPTP {
 	ULONG64 All;
@@ -109,7 +107,8 @@ typedef struct INVEPT_DESC
 	UINT64  reserved;
 }INVEPT_DESC, * PINVEPT_DESC;
 
-PEPTP Initialize_EPTP();
-
+PEPTP EPTP_Initialize();
+/*
 unsigned char INVEPT_ALL_CONTEXTS(void);
 unsigned char INVEPT_SINGLE_CONTEXT(EPTP ept_pointer);
+*/

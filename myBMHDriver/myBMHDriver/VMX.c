@@ -1,8 +1,6 @@
 #include "MSR.h"
-#include "CPU.h"
-#include "Common.h"
 #include "EPT.h"
-#include "BMHDriver.h"
+#include "BMHDriver_CPU.h"
 #include "VMX.h"
 #include "intrin.h"
 
@@ -10,18 +8,18 @@ PVirtualMachineState vmState;
 int ProcessorCounts;
 
 
-void Initiate_VMX(void) {
+void VMX_Initiate(void) {
 
-	if (!Is_VMX_Supported())
+	if (!Check_VMX_Support())
 	{
-		DbgPrint("[*] VMX is not supported in this machine ! \n");
+		DbgPrint("VMX not supported in this machine ! \n");
 		return;
 	}
 
 	ProcessorCounts = KeQueryActiveProcessorCount(0);
 	vmState = ExAllocatePoolWithTag(NonPagedPool, sizeof(VirtualMachineState) * ProcessorCounts, POOLTAG); //struct array
 
-	DbgPrint("[*] Count of logical processor is %d \n", ProcessorCounts);
+	DbgPrint("Count of logical processor is %d \n", ProcessorCounts);
 	DbgPrint("\n=====================================================\n");
 
 	KAFFINITY kAffinityMask;
@@ -29,18 +27,20 @@ void Initiate_VMX(void) {
 	{
 		kAffinityMask = power(2, i);
 		KeSetSystemAffinityThread(kAffinityMask);
-		// do st here !
+
 		//DbgPrint("\t\tCurrent thread is executing in %d th logical processor. \n", i);
 		printCurrentExecutingLogicalProcessor(i);
-		Enable_VMX_Operation();	// Enabling VMX Operation
-		DbgPrint("[*] VMX Operation Enabled Successfully ! \n");
+		
+		Enable_VMX_Operation_asm();	// Enabling VMX Operation
+		
+		DbgPrint("VMX Operation Enabled Successfully ! \n");
 
 		Allocate_VMXON_Region(&vmState[i]);
 		Allocate_VMCS_Region(&vmState[i]);
 
 
-		DbgPrint("[*] VMCS Region is allocated at  ===============> %llx \n", vmState[i].VMCS_REGION);
-		DbgPrint("[*] VMXON Region is allocated at ===============> %llx \n", vmState[i].VMXON_REGION);
+		DbgPrint("VMCS Region is allocated at %llx \n", vmState[i].VMCS_REGION);
+		DbgPrint("VMXON Region is allocated at %llx \n", vmState[i].VMXON_REGION);
 
 		DbgPrint("\n=====================================================\n");
 
@@ -49,9 +49,9 @@ void Initiate_VMX(void) {
 }
 
 
-void Terminate_VMX(void) {
+void VMX_Terminate(void) {
 
-	DbgPrint("\n[*] Terminating VMX...\n");
+	DbgPrint("\nTerminating VMX...\n");
 
 	KAFFINITY kAffinityMask;
 	for (size_t i = 0; i < ProcessorCounts; i++)
@@ -67,7 +67,7 @@ void Terminate_VMX(void) {
 
 	}
 
-	DbgPrint("[*] VMX Operation turned off successfully. \n");
+	DbgPrint("VMX Operation turned off successfully. \n");
 
 }
 
@@ -75,7 +75,7 @@ void Terminate_VMX(void) {
 
 
 
-void LaunchVM(int ProcessorID, PEPTP EPTP) {
+void VM_Launch(int ProcessorID, PEPTP EPTP) {
 
 	DbgPrint("\n======================== Launching VM =============================\n");
 
@@ -87,16 +87,13 @@ void LaunchVM(int ProcessorID, PEPTP EPTP) {
 
 	PAGED_CODE();
 
-	// Get read of nasty interrupts :)
-	//	CLI_Instruction();
-
 	// Allocate stack for the VM Exit Handler.
 	UINT64 VMM_STACK_VA = (UINT64)ExAllocatePoolWithTag(NonPagedPool, VMM_STACK_SIZE, POOLTAG);
 	vmState[ProcessorID].VMM_Stack = VMM_STACK_VA;
 
 	if ((void*)(vmState[ProcessorID].VMM_Stack) == NULL)
 	{
-		DbgPrint("[*] Error in allocating VMM Stack.\n");
+		DbgPrint("Error in allocating VMM Stack.\n");
 		return;
 	}
 	RtlZeroMemory((void *)(vmState[ProcessorID].VMM_Stack), VMM_STACK_SIZE);
@@ -105,7 +102,7 @@ void LaunchVM(int ProcessorID, PEPTP EPTP) {
 	vmState[ProcessorID].MSRBitMap = (UINT64)MmAllocateNonCachedMemory(PAGE_SIZE);  // should be aligned
 	if ((void *)(vmState[ProcessorID].MSRBitMap) == NULL)
 	{
-		DbgPrint("[*] Error in allocating MSRBitMap.\n");
+		DbgPrint("Error in allocating MSRBitMap.\n");
 		return;
 	}
 	RtlZeroMemory((void*)(vmState[ProcessorID].MSRBitMap), PAGE_SIZE);
@@ -114,26 +111,26 @@ void LaunchVM(int ProcessorID, PEPTP EPTP) {
 
 
 	// Clear the VMCS State
-	if (!Clear_VMCS_State(&vmState[ProcessorID])) {
+	if (!VMCS_Clear_State(&vmState[ProcessorID])) {
 		goto ErrorReturn;
 	}
 
 	// Load VMCS (Set the Current VMCS)
-	if (!Load_VMCS(&vmState[ProcessorID]))
+	if (!VMCS_Load(&vmState[ProcessorID]))
 	{
 		goto ErrorReturn;
 	}
 
 
-	DbgPrint("[*] Setting up VMCS.\n");
-	Setup_VMCS(&vmState[ProcessorID], EPTP);
+	DbgPrint("VMCS being set up.\n");
+	VMCS_Setup(&vmState[ProcessorID], EPTP);
 
 
 
-	DbgPrint("[*] Executing VMLAUNCH.\n");
+	DbgPrint("Executing VMLAUNCH.\n");
 
 	//assembly fn to save the current sp and bp for returning
-	Save_VMXOFF_State();
+	Save_VMXOFF_State_asm();
 
 	__vmx_vmlaunch();
 
@@ -141,22 +138,21 @@ void LaunchVM(int ProcessorID, PEPTP EPTP) {
 	ULONG64 ErrorCode = 0;
 	__vmx_vmread(VM_INSTRUCTION_ERROR, &ErrorCode);
 	__vmx_off();
-	DbgPrint("[*] VMLAUNCH Error : 0x%llx\n", ErrorCode);
+	DbgPrint("VMLAUNCH Error : 0x%llx\n", ErrorCode);
 	DbgBreakPoint();
 
 	DbgPrint("\n===================================================================\n");
 	goto ErrorReturn;
-	// Start responsing to interrupts
-	// STI_Instruction();
 
 
-ReturnWithoutError:
+SuccessReturn:
 	__vmx_off();
-	DbgPrint("[*] VMXOFF Executed Successfully. !\n");
+	DbgPrint("VMXOFF Executed Successfully. !\n");
 	return TRUE;
+
 	// Return With Error
 ErrorReturn:
-	DbgPrint("[*] Fail to setup VMCS !\n");
+	DbgPrint("Failed to setup VMCS !\n");
 	return FALSE;
 }
 
@@ -167,33 +163,33 @@ UINT64 VMPTRST()
 	vmcspa.QuadPart = 0;
 	__vmx_vmptrst((unsigned __int64*)&vmcspa);
 
-	DbgPrint("[*] VMPTRST %llx\n", vmcspa);
+	DbgPrint("VMPTRST %llx\n", vmcspa);
 
 	return 0;
 }
 
-BOOLEAN Clear_VMCS_State(IN PVirtualMachineState vmState) {
+BOOLEAN VMCS_Clear_State(IN PVirtualMachineState vmState) {
 
 	// Clear the state of the VMCS to inactive
 	int status = __vmx_vmclear(&vmState->VMCS_REGION);
 
-	DbgPrint("[*] VMCS VMCLAEAR Status is : %d\n", status);
+	DbgPrint("VMCS VMCLAEAR Status is : %d\n", status);
 	if (status)
 	{
 		// Otherwise terminate the VMX
-		DbgPrint("[*] VMCS failed to clear with status %d\n", status);
+		DbgPrint("VMCS failed to clear with status %d\n", status);
 		__vmx_off();
 		return FALSE;
 	}
 	return TRUE;
 }
 
-BOOLEAN Load_VMCS(IN PVirtualMachineState vmState) {
+BOOLEAN VMCS_Load(IN PVirtualMachineState vmState) {
 
 	int status = __vmx_vmptrld(&vmState->VMCS_REGION);
 	if (status)
 	{
-		DbgPrint("[*] VMCS failed with status %d\n", status);
+		DbgPrint("VMCS failed with status %d\n", status);
 		return FALSE;
 	}
 	return TRUE;
@@ -288,7 +284,12 @@ void FillGuestSelectorData(
 
 
 }
+/*
+//debug test - fixed now
+
 BOOLEAN Setup_VMCS_Attempt(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
+	//this function is not required
+
 	BOOLEAN Status = FALSE;
 	ULONG64 GdtBase = 0;
 	SEGMENT_SELECTOR SegmentSelector = { 0 };
@@ -334,7 +335,7 @@ BOOLEAN Setup_VMCS_Attempt(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 	__int64 pinbased_control_final = (pinbased_control0 & pinbased_control1);
 	__vmx_vmwrite(PIN_BASED_VM_EXEC_CONTROL, pinbased_control_final);
 
-	//missed secondary processor*/
+	//missed secondary processor
 
 	union __vmx_entry_control_t entry_controls = { 0 };
 	entry_controls.bits.ia32e_mode_guest = 1;
@@ -361,10 +362,10 @@ BOOLEAN Setup_VMCS_Attempt(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 	secondary_controls.bits.enable_xsave_xrstor = 1;
 	secondary_controls.bits.enable_invpcid = 1;
 	vmx_adjust_secondary_processor_based_controls(&secondary_controls);
-	__vmx_vmwrite(SECONDARY_VM_EXEC_CONTROL, secondary_controls.control);*/
+	__vmx_vmwrite(SECONDARY_VM_EXEC_CONTROL, secondary_controls.control);
 
 	__vmx_vmwrite(CPU_BASED_VM_EXEC_CONTROL, AdjustControls(CPU_BASED_HLT_EXITING | CPU_BASED_ACTIVATE_SECONDARY_CONTROLS | CPU_BASED_ACTIVATE_MSR_BITMAP, MSR_IA32_VMX_PROCBASED_CTLS));
-	__vmx_vmwrite(SECONDARY_VM_EXEC_CONTROL, AdjustControls(CPU_BASED_CTL2_RDTSCP /* | CPU_BASED_CTL2_ENABLE_EPT*/, MSR_IA32_VMX_PROCBASED_CTLS2));
+	__vmx_vmwrite(SECONDARY_VM_EXEC_CONTROL, AdjustControls(CPU_BASED_CTL2_RDTSCP /* | CPU_BASED_CTL2_ENABLE_EPT, MSR_IA32_VMX_PROCBASED_CTLS2));
 
 	
 	__vmx_vmwrite(GUEST_CS_SELECTOR, GetCs());
@@ -452,14 +453,11 @@ BOOLEAN Setup_VMCS_Attempt(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 	//Exit:
 	return Status;
 }
-BOOLEAN Setup_VMCS(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
+*/
+BOOLEAN VMCS_Setup(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 
 
 	BOOLEAN Status = FALSE;
-
-
-	// Load Extended Page Table Pointer
-	//__vmx_vmwrite(EPT_POINTER, EPTP->All);
 
 	ULONG64 GdtBase = 0;
 	SEGMENT_SELECTOR SegmentSelector = { 0 };
@@ -491,16 +489,19 @@ BOOLEAN Setup_VMCS(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 	DbgPrint("GUEST_IA32_DEBUGCTL: 0x%x\n", __readmsr(MSR_IA32_DEBUGCTL) & 0xFFFFFFFF);
 	DbgPrint("GUEST_IA32_DEBUGCTL_HIGH: 0x%x\n", __readmsr(MSR_IA32_DEBUGCTL) >> 32);
 
-	DbgPrint("[*] test 1\n");
+	//DbgPrint("Debug test 1\n");
 	__vmx_vmwrite(GUEST_IA32_PAT, __readmsr(MSR_IA32_CR_PAT));
 	__vmx_vmwrite(GUEST_IA32_EFER, __readmsr(MSR_EFER));
 	__vmx_vmwrite(GUEST_IA32_PERF_GLOBAL_CTRL, __readmsr(MSR_CORE_PERF_GLOBAL_CTRL));
-	DbgPrint("[*] test 2\n");
+
+	//DbgPrint("Debug test 2\n");
+
 	__vmx_vmwrite(HOST_IA32_PAT, __readmsr(MSR_IA32_CR_PAT));
 	__vmx_vmwrite(HOST_IA32_EFER, __readmsr(MSR_EFER));
 	__vmx_vmwrite(HOST_IA32_PERF_GLOBAL_CTRL, __readmsr(MSR_CORE_PERF_GLOBAL_CTRL));
 	
-	DbgPrint("[*] test 3\n");
+	//DbgPrint("Debug test 3\n");
+
 	DbgPrint("GUEST_IA32_PAT: 0x%x\n", __readmsr(MSR_IA32_CR_PAT));
 	DbgPrint("GUEST_IA32_EFER: 0x%x\n", __readmsr(MSR_EFER));
 	DbgPrint("GUEST_IA32_PERF_GLOBAL_CTRL: 0x%x\n", __readmsr(MSR_CORE_PERF_GLOBAL_CTRL));
@@ -643,7 +644,7 @@ BOOLEAN Setup_VMCS(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 
 
 
-	// left here just for test
+	// guest stack
 	UINT64 GUEST_STACK_VA = (UINT64)ExAllocatePoolWithTag(NonPagedPool, 128, POOLTAG);
 
 	__vmx_vmwrite(GUEST_RSP, (ULONG64)GUEST_STACK_VA + 64);     //setup guest sp
@@ -652,12 +653,12 @@ BOOLEAN Setup_VMCS(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 
 
 	__vmx_vmwrite(HOST_RSP, ((ULONG64)vmState->VMM_Stack + VMM_STACK_SIZE - 1));
-	__vmx_vmwrite(HOST_RIP, (ULONG64)VMExitHandler);
+	__vmx_vmwrite(HOST_RIP, (ULONG64)VM_Exit_Handler_asm);
 
 	DbgPrint("GUEST_RSP: 0x%x\n", (ULONG64)GUEST_STACK_VA + 64);
 	DbgPrint("GUEST_RI: 0x%x\n", (ULONG64)VirtualGuestMemoryAddress);
 	DbgPrint("HOST_RSP: 0x%x\n", ((ULONG64)vmState->VMM_Stack + VMM_STACK_SIZE - 1));
-	DbgPrint("HOST_RIP: 0x%x\n", (ULONG64)VMExitHandler);
+	DbgPrint("HOST_RIP: 0x%x\n", (ULONG64)VM_Exit_Handler_asm);
 
 	Status = TRUE;
 //Exit:
@@ -665,42 +666,7 @@ BOOLEAN Setup_VMCS(IN PVirtualMachineState vmState, IN PEPTP EPTP) {
 }
 
 
-VOID ResumeToNextInstruction(VOID)
-{
-	PVOID ResumeRIP = NULL;
-	PVOID CurrentRIP = NULL;
-	ULONG ExitInstructionLength = 0;
-
-	__vmx_vmread(GUEST_RIP, &CurrentRIP);
-	__vmx_vmread(VM_EXIT_INSTRUCTION_LEN, &ExitInstructionLength);
-
-	ResumeRIP = (PCHAR)CurrentRIP + ExitInstructionLength;
-
-	__vmx_vmwrite(GUEST_RIP, (ULONG64)ResumeRIP);
-}
-
-VOID VM_Resumer(VOID)
-{
-
-	DbgPrint("We are in VM_Resmuer function\n");
-	__vmx_vmresume();
-
-	// if VMRESUME succeed will never be here !
-
-	ULONG64 ErrorCode = 0;
-	__vmx_vmread(VM_INSTRUCTION_ERROR, &ErrorCode);
-	__vmx_off();
-	DbgPrint("[*] VMRESUME Error : 0x%llx\n", ErrorCode);
-
-	// It's such a bad error because we don't where to go !
-	// prefer to break
-	DbgBreakPoint();
-
-
-
-}
-
-VOID MainVMExitHandler(PGUEST_REGS GuestRegs)
+VOID Main_VM_Exit_Handler(PGUEST_REGS GuestRegs)
 {
 	ULONG ExitReason = 0;
 	__vmx_vmread(VM_EXIT_REASON, &ExitReason);
@@ -736,13 +702,13 @@ VOID MainVMExitHandler(PGUEST_REGS GuestRegs)
 	}
 	case EXIT_REASON_HLT:
 	{
-		DbgPrint("[*] Execution of HLT detected... \n");
+		DbgPrint("Execution of HLT detected... \n");
 
 		// DbgBreakPoint();
 
 		// that's enough for now ;)
-		Restore_To_VMXOFF_State();
-		DbgPrint("[*] This will not get printed as ip is changed now \n");
+		Restore_To_VMXOFF_State_asm();
+		DbgPrint("This will not get printed as ip is changed now \n");
 		break;
 	}
 	case EXIT_REASON_EXCEPTION_NMI:
@@ -793,7 +759,45 @@ VOID MainVMExitHandler(PGUEST_REGS GuestRegs)
 	}
 	}
 }
+
+VOID ResumeToNextInstruction(VOID)
+{
+	PVOID ResumeRIP = NULL;
+	PVOID CurrentRIP = NULL;
+	ULONG ExitInstructionLength = 0;
+
+	__vmx_vmread(GUEST_RIP, &CurrentRIP);
+	__vmx_vmread(VM_EXIT_INSTRUCTION_LEN, &ExitInstructionLength);
+
+	ResumeRIP = (PCHAR)CurrentRIP + ExitInstructionLength;
+
+	__vmx_vmwrite(GUEST_RIP, (ULONG64)ResumeRIP);
+}
+
+VOID VM_Resumer(VOID)
+{
+
+	DbgPrint("We are in VM_Resmuer function\n");
+	__vmx_vmresume();
+
+	// if VMRESUME succeed will never be here !
+
+	ULONG64 ErrorCode = 0;
+	__vmx_vmread(VM_INSTRUCTION_ERROR, &ErrorCode);
+	__vmx_off();
+	DbgPrint("[*] VMRESUME Error : 0x%llx\n", ErrorCode);
+
+	// It's such a bad error because we don't where to go !
+	// prefer to break
+	DbgBreakPoint();
+}
+
+
+
+
+
 //debug test
+//fixed now
 static void vmx_adjust_entry_controls(union __vmx_entry_control_t* entry_controls)
 {
 	unsigned int capability_msr;

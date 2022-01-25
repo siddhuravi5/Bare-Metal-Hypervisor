@@ -1,4 +1,3 @@
-
 #pragma once
 #include <ntddk.h>
 #include "EPT.h"
@@ -13,7 +12,7 @@ typedef struct _VirtualMachineState
 	UINT64 MSRBitMapPhysical;					// MSRBitMap Physical Address
 } VirtualMachineState, * PVirtualMachineState;
 
-//debug test
+//debug test - fixed now
 #define SEGMENT_DESCRIPTOR_TYPE_TSS_AVAILABLE                        0x00000009
 #define SEGMENT_DESCRIPTOR_TYPE_TSS_BUSY                             0x0000000B
 
@@ -232,6 +231,7 @@ union __vmx_secondary_processor_based_control_t
 		unsigned __int64 use_tsc_scaling : 1;
 	} bits;
 };
+
 
 // PIN-Based Execution
 #define PIN_BASED_VM_EXECUTION_CONTROLS_EXTERNAL_INTERRUPT        0x00000001
@@ -509,8 +509,8 @@ extern int ProcessorCounts;
 
 ULONG ExitReason;
 
-void Initiate_VMX(void);
-void Terminate_VMX(void);
+void VMX_Initiate(void);
+void VMX_Terminate(void);
 UINT64 VirtualAddress_to_PhysicalAddress(void* va);
 PVOID PhysicalAddress_to_VirtualAddress(UINT64 pa);
 BOOLEAN Allocate_VMXON_Region(IN PVirtualMachineState vmState);
@@ -521,17 +521,19 @@ int ipow(int base, int exp);
 void Inline_Memory_Patcher(void);
 extern ULONG64 inline Get_GDT_Base(void);
 extern ULONG64 inline Get_IDT_Base(void);
-extern void inline Enable_VMX_Operation(void);
-extern void inline  Restore_To_VMXOFF_State();
-extern void inline  Save_VMXOFF_State();
+extern void inline Enable_VMX_Operation_asm(void);
+extern void inline  Restore_To_VMXOFF_State_asm();
+extern void inline  Save_VMXOFF_State_asm();
 extern unsigned char inline INVEPT_Instruction(_In_ unsigned long type, _In_ void* descriptor);
-BOOLEAN Is_VMX_Supported();
-VOID VMExitHandler(VOID);
-void LaunchVM(int ProcessorID, PEPTP EPTP);
-BOOLEAN Setup_VMCS(IN PVirtualMachineState vmState, IN PEPTP EPTP);
-BOOLEAN Load_VMCS(IN PVirtualMachineState vmState);
-BOOLEAN Clear_VMCS_State(IN PVirtualMachineState vmState);
+BOOLEAN Check_VMX_Support();
+VOID VM_Exit_Handler_asm(VOID);
+void VM_Launch(int ProcessorID, PEPTP EPTP);
+BOOLEAN VMCS_Setup(IN PVirtualMachineState vmState, IN PEPTP EPTP);
+BOOLEAN VMCS_Load(IN PVirtualMachineState vmState);
+BOOLEAN VMCS_Clear_State(IN PVirtualMachineState vmState);
 VOID VM_Resumer(VOID);
+
+//debug text - fixed now
 static unsigned __int64 vmx_adjust_cv(unsigned int capability_msr, unsigned __int64 value);
 void vmx_adjust_pinbased_controls(union __vmx_pinbased_control_msr_t* exit_controls);
 static void vmx_adjust_exit_controls(union __vmx_exit_control_t* exit_controls);
