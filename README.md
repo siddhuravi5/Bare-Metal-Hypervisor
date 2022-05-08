@@ -1,5 +1,5 @@
 # Bare-Metal-Hypervisor
-hardware virtualization
+Hardware Virtualization
 
 The host OS was fully virtualized, and all the targeted instructions causes
 VM exit, and the instructions were handled by the hypervisor. Any targeted
