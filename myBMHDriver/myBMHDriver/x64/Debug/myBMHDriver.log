@@ -1,23 +1,93 @@
-﻿E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(113,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.props" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.Shared.props (352,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(178,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.common.targets (1896,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+﻿E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\myBMHDriver.vcxproj(113,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.props" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.Shared.props (352,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\myBMHDriver.vcxproj(193,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.common.targets (1896,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
   Building 'myBMHDriver' with toolset 'WindowsKernelModeDriver10.0' and the 'Desktop' target platform.
   VMX.c
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(151,13): warning C4098: 'VM_Launch': 'void' function returning a value
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(156,14): warning C4098: 'VM_Launch': 'void' function returning a value
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(148,14): warning C4102: 'SuccessReturn': unreferenced label
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(672,42): warning C4133: 'function': incompatible types - from 'ULONG *' to 'size_t *'
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(676,53): warning C4133: 'function': incompatible types - from 'ULONG *' to 'size_t *'
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(769,37): warning C4047: 'function': 'size_t *' differs in levels of indirection from 'PVOID *'
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(769,26): warning C4024: '__vmx_vmread': different types for formal and actual parameter 2
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(770,62): warning C4133: 'function': incompatible types - from 'ULONG *' to 'size_t *'
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\VMX.c(878,31): warning C4333: '>>': right shift by too large amount, data loss
-  myBMHDriver.vcxproj -> E:\Final Year Project\BareMetalHypervisor\myBMHDriver\x64\Debug\myBMHDriver.sys
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(113,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.props" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.Shared.props (352,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(178,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.common.targets (1896,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\Helper.h(18,2): warning C4091: 'typedef ': ignored on left of '_SEGMENT_REGISTERS' when no variable is declared
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(96,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(99,43): warning C4047: 'function': 'unsigned __int64' differs in levels of indirection from 'void *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(99,39): warning C4024: 'AsmVmxVmcall': different types for formal and actual parameter 2
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(99,49): warning C4047: 'function': 'unsigned __int64' differs in levels of indirection from 'void *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(99,45): warning C4024: 'AsmVmxVmcall': different types for formal and actual parameter 3
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(99,55): warning C4047: 'function': 'unsigned __int64' differs in levels of indirection from 'void *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(99,51): warning C4024: 'AsmVmxVmcall': different types for formal and actual parameter 4
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(102,53): warning C4022: 'MmFreeContiguousMemory': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(103,53): warning C4022: 'MmFreeContiguousMemory': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(104,48): warning C4022: 'ExFreePoolWithTag': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(105,48): warning C4022: 'ExFreePoolWithTag': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(122,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(140,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(151,2): warning C4020: 'LogPrintError': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(166,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(178,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(183,3): warning C4020: 'LogPrintWarning': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(198,3): warning C4020: 'LogPrintWarning': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(486,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(495,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(629,2): warning C4020: 'LogPrintError': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(827,3): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(831,63): warning C4242: 'function': conversion from 'ULONG64' to 'int', possible loss of data
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(849,3): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(850,70): warning C4242: 'function': conversion from 'UINT64' to 'int', possible loss of data
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(854,3): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(855,44): warning C4242: 'function': conversion from 'UINT64' to 'int', possible loss of data
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(927,4): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(928,78): warning C4047: 'function': 'int' differs in levels of indirection from 'HANDLE'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(928,76): warning C4024: 'AddToSecretData': different types for formal and actual parameter 2
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(929,37): warning C4242: 'function': conversion from 'ULONG64' to 'int', possible loss of data
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(944,4): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(945,79): warning C4047: 'function': 'int' differs in levels of indirection from 'HANDLE'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(945,77): warning C4024: 'AddToSecretData': different types for formal and actual parameter 2
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(946,37): warning C4242: 'function': conversion from 'ULONG64' to 'int', possible loss of data
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX.c(962,3): warning C4020: 'LogPrintWarning': too many actual parameters
+  VMX_Regions_Manager.c
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\Helper.h(18,2): warning C4091: 'typedef ': ignored on left of '_SEGMENT_REGISTERS' when no variable is declared
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(18,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(80,111): warning C4047: '=': 'UINT64' differs in levels of indirection from 'BYTE *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(81,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(84,135): warning C4047: '=': 'UINT64' differs in levels of indirection from 'BYTE *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(85,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(89,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(98,3): warning C4020: 'LogPrintError': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(105,60): warning C4047: '=': 'UINT64' differs in levels of indirection from 'BYTE *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(139,109): warning C4047: '=': 'UINT64' differs in levels of indirection from 'BYTE *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(140,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(142,127): warning C4047: '=': 'UINT64' differs in levels of indirection from 'BYTE *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(143,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(147,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(155,58): warning C4047: '=': 'UINT64' differs in levels of indirection from 'BYTE *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(166,73): warning C4047: '=': 'UINT64' differs in levels of indirection from 'PVOID'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(169,46): warning C4047: '==': 'UINT64' differs in levels of indirection from 'void *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(174,2): warning C4022: 'memset': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(176,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(185,107): warning C4047: '=': 'UINT64' differs in levels of indirection from 'PVOID'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(187,61): warning C4047: '==': 'UINT64' differs in levels of indirection from 'void *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(192,2): warning C4022: 'memset': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(194,108): warning C4022: 'VirtualAddressToPhysicalAddress': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(196,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(197,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(217,107): warning C4047: '=': 'UINT64' differs in levels of indirection from 'PVOID'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(219,61): warning C4047: '==': 'UINT64' differs in levels of indirection from 'void *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(224,2): warning C4022: 'memset': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(226,108): warning C4022: 'VirtualAddressToPhysicalAddress': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(228,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(229,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(234,107): warning C4047: '=': 'UINT64' differs in levels of indirection from 'PVOID'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(236,61): warning C4047: '==': 'UINT64' differs in levels of indirection from 'void *'
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(241,2): warning C4022: 'memset': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(243,108): warning C4022: 'VirtualAddressToPhysicalAddress': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(245,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(246,2): warning C4020: 'LogPrintInfo': too many actual parameters
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(248,32): warning C4022: 'SetBit': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(251,33): warning C4022: 'SetBit': pointer mismatch for actual parameter 1
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\VMX_Regions_Manager.c(253,32): warning C4022: 'SetBit': pointer mismatch for actual parameter 1
+  Generating Code...
+  myBMHDriver.vcxproj -> E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\x64\Debug\myBMHDriver.sys
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\myBMHDriver.vcxproj(113,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.props" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.Shared.props (352,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\myBMHDriver.vcxproj(193,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.common.targets (1896,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
   Done Adding Additional Store
-  Successfully signed: E:\Final Year Project\BareMetalHypervisor\myBMHDriver\x64\Debug\myBMHDriver.sys
+  Successfully signed: E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\x64\Debug\myBMHDriver.sys
   
   Inf2Cat task was skipped as there were no inf files to process
   
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(113,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.props" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.Shared.props (352,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
-E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(178,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.common.targets (1896,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\myBMHDriver.vcxproj(113,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.props" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.Shared.props (352,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver-part-7\myBMHDriver\myBMHDriver.vcxproj(193,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.common.targets (1896,3)". This is most likely a build authoring error. This subsequent import will be ignored. 

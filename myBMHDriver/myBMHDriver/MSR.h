@@ -16,7 +16,7 @@
 #define MSR_IA32_VMX_CR4_FIXED1             0x489
 #define MSR_IA32_VMX_VMCS_ENUM              0x48A
 #define MSR_IA32_VMX_PROCBASED_CTLS2        0x48B
-#define MSR_IA32_VMX_EPT_VPID_CAP           0x48C
+#define MSR_IA32_VMX_EPT_VPID_CAP           0x0000048C
 #define MSR_IA32_VMX_TRUE_PINBASED_CTLS     0x48D
 #define MSR_IA32_VMX_TRUE_PROCBASED_CTLS    0x48E
 #define MSR_IA32_VMX_TRUE_EXIT_CTLS         0x48F
@@ -74,6 +74,7 @@ typedef union _IA32_VMX_BASIC_MSR
 		ULONG32 VmExitReport : 1;          // [54]
 		ULONG32 VmxCapabilityHint : 1;     // [55]
 		ULONG32 Reserved3 : 8;             // [56-63]
+
 	} Fields;
 } IA32_VMX_BASIC_MSR, * PIA32_VMX_BASIC_MSR;
 

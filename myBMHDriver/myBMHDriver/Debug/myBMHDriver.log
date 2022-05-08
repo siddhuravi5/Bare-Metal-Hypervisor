@@ -1,0 +1,47 @@
+﻿E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(113,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.props" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.Shared.props (352,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+E:\Final Year Project\BareMetalHypervisor\myBMHDriver\myBMHDriver\myBMHDriver.vcxproj(179,5): warning MSB4011: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets" cannot be imported again. It was already imported at "C:\Program Files (x86)\Windows Kits\10\build\WindowsDriver.common.targets (1896,3)". This is most likely a build authoring error. This subsequent import will be ignored. 
+  Building 'myBMHDriver' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
+  Assembling Assembly.asm...
+Assembly.asm(43): error A2085: instruction or register not accepted in current CPU mode
+Assembly.asm(45): error A2085: instruction or register not accepted in current CPU mode
+Assembly.asm(75): error A2085: instruction or register not accepted in current CPU mode
+Assembly.asm(109): error A2085: instruction or register not accepted in current CPU mode
+Assembly.asm(197): error A2008: syntax error : pushfq
+Assembly.asm(211): error A2085: instruction or register not accepted in current CPU mode
+Assembly.asm(220): error A2085: instruction or register not accepted in current CPU mode
+Assembly.asm(40): error A2006: undefined symbol : rax
+Assembly.asm(42): error A2006: undefined symbol : rax
+Assembly.asm(44): error A2006: undefined symbol : rax
+Assembly.asm(47): error A2006: undefined symbol : rax
+Assembly.asm(77): error A2006: undefined symbol : rsp
+Assembly.asm(78): error A2006: undefined symbol : rbp
+Assembly.asm(81): error A2006: undefined symbol : rsp
+Assembly.asm(84): error A2006: undefined symbol : rax
+Assembly.asm(85): error A2006: undefined symbol : rax
+Assembly.asm(89): error A2006: undefined symbol : rbx
+Assembly.asm(90): error A2006: undefined symbol : rsi
+Assembly.asm(91): error A2006: undefined symbol : rsp
+Assembly.asm(92): error A2006: undefined symbol : rdi
+Assembly.asm(101): error A2006: undefined symbol : rsp
+Assembly.asm(102): error A2006: undefined symbol : rbp
+Assembly.asm(112): error A2006: undefined symbol : rax
+Assembly.asm(115): error A2006: undefined symbol : rax
+Assembly.asm(118): error A2006: undefined symbol : rax
+Assembly.asm(126): error A2006: undefined symbol : rax
+Assembly.asm(131): error A2006: undefined symbol : rax
+Assembly.asm(136): error A2006: undefined symbol : rax
+Assembly.asm(141): error A2006: undefined symbol : rax
+Assembly.asm(146): error A2006: undefined symbol : rax
+Assembly.asm(151): error A2006: undefined symbol : rax
+Assembly.asm(156): error A2006: undefined symbol : rax
+Assembly.asm(161): error A2006: undefined symbol : rax
+Assembly.asm(166): error A2006: undefined symbol : rax
+Assembly.asm(174): error A2006: undefined symbol : rax
+Assembly.asm(198): error A2006: undefined symbol : rax
+Assembly.asm(203): error A2006: undefined symbol : rax
+Assembly.asm(205): error A2006: undefined symbol : rax
+Assembly.asm(212): error A2006: undefined symbol : rdx
+Assembly.asm(213): error A2006: undefined symbol : rax
+Assembly.asm(218): error A2006: undefined symbol : rax
+Assembly.asm(219): error A2006: undefined symbol : rdx
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets(70,5): error MSB3721: The command "ml.exe /c /nologo /Zi /Fo"Debug\Assembly.obj" /W3 /errorReport:prompt  /TaAssembly.asm" exited with code 1.

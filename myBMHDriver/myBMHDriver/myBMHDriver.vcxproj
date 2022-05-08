@@ -157,21 +157,36 @@
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BMHV_Routines.c" />
+    <ClCompile Include="Helper.c" />
     <ClCompile Include="EPT.c" />
-    <ClCompile Include="LogicalProcessor.c" />
+    <ClCompile Include="NMI_Interrupts.c" />
+    <ClCompile Include="Invept_Instruction_Handler.c" />
     <ClCompile Include="BMHDriver.c" />
-    <ClCompile Include="Memory.c" />
+    <ClCompile Include="VMCall_Handler.c" />
     <ClCompile Include="VMX.c" />
+    <ClCompile Include="VMX_Regions_Manager.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BMHV_Routines.h" />
+    <ClInclude Include="Dpc.h" />
     <ClInclude Include="EPT.h" />
+    <ClInclude Include="NMI_Interrupts.h" />
+    <ClInclude Include="Global_Variables.h" />
+    <ClInclude Include="InlineAsm.h" />
+    <ClInclude Include="Invept_Instruction_Handler.h" />
     <ClInclude Include="MSR.h" />
-    <ClInclude Include="BMHDriver_CPU.h" />
+    <ClInclude Include="Helper.h" />
+    <ClInclude Include="VMCall_Handler.h" />
     <ClInclude Include="VMX.h" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="Assembly.asm" />
-    <MASM Include="VirtualMachineExitHandler.asm" />
+    <MASM Include="Assembly_Common.asm" />
+    <MASM Include="Assembly_EPT.asm" />
+    <MASM Include="Assembly_Segment_Registers.asm" />
+    <MASM Include="Assembly_VMExit_Handler.asm" />
+    <MASM Include="Assembly_VMX_Context_State.asm" />
+    <MASM Include="Assembly_VMX_Operation.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

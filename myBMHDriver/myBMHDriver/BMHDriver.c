@@ -1,11 +1,13 @@
 #include <ntddk.h>
 #include <wdf.h>
 #include <wdm.h>
-#include "BMHDriver_CPU.h"
+#include "Helper.h"
 #include "MSR.h"
 #include "VMX.h"
+#include "BMHV_Routines.h";
+#include "Global_Variables.h";
 
-
+/*This function is called when the driver loaded*/
 NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPath)
 {
 	NTSTATUS NtStatus = STATUS_SUCCESS;
@@ -14,7 +16,8 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
 
 	//the lowercase prefix represnts the type, us - unicode_string
 	UNICODE_STRING usDriverName, usDosDeviceName;
-
+	DbgPrint("====================================================================================================\n");
+	DbgPrint("====================================================================================================\n");
 	DbgPrint("My BMH Driver Entry Called\n");
 
 	RtlInitUnicodeString(&usDriverName, L"\\Device\\MyBMHDevice");
@@ -46,37 +49,11 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPa
 
 	pDriverObject->DriverUnload = UnloadDriver;
 	IoCreateSymbolicLink(&usDosDeviceName, &usDriverName);
-
-	__try
-	{
-
-		// Initiating EPTP and VMX
-		PEPTP EPTP = EPTP_Initialize();
-		VMX_Initiate();
-
-		//create guest code, our guest VM
-		//it was 100*
-		//10 is the number of pages
-		for (size_t i = 0; i < (10 * PAGE_SIZE) - 1; i++)
-		{
-			void* TempAsm = "\xF4";
-			memcpy((void *)(VirtualGuestMemoryAddress + i), TempAsm, 1);
-
-		}
-		// Launching VM for Test (in the 0th virtual processor)
-		int ProcessorID = 0;
-
-		VM_Launch(ProcessorID, EPTP);
-		DbgPrint("Guest VM Launched and exited successfully\n");
-
-	}
-	__except (GetExceptionCode())
-	{
-
-	}
-	return NtStatus;
+	
+	return STATUS_SUCCESS;
 }
 
+/*This function is called when you unload the driver*/
 VOID UnloadDriver(PDRIVER_OBJECT  DriverObject)
 {
 	UNICODE_STRING usDosDeviceName;
@@ -84,13 +61,29 @@ VOID UnloadDriver(PDRIVER_OBJECT  DriverObject)
 	RtlInitUnicodeString(&usDosDeviceName, L"\\DosDevices\\MyBMHDevice");
 	IoDeleteSymbolicLink(&usDosDeviceName);
 	IoDeleteDevice(DriverObject->DeviceObject);
+	LogWarning("Hypervisor From Scratch's driver unloaded");
 
 }
 
+/*This function is called when you open the handle to the device*/
 NTSTATUS CreateDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
+	secretDataLength = 0;
+	SecretData[secretDataLength] = "\n";
+	secretDataLength += 1;
+	VMX_ROOT = TRUE;
+	DbgPrint("Create Driver function\n");
 
-	DbgPrint("Create Driver\n");
+	LogInfo("Bare Metal Hypervisor Started...");
+
+	if (BMHV_Initialize_VMX())
+	{
+		LogInfo("**********************Hypervisor From Scratch loaded successfully :)**********************\n");
+	}
+	else
+	{
+		LogError("**********************Hypervisor From Scratch was not loaded :(**********************\n");
+	}
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -99,6 +92,7 @@ NTSTATUS CreateDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
+/*This function is called when you read from the device*/
 NTSTATUS ReadDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
 	DbgPrint("Not implemented yet\n");
@@ -110,6 +104,7 @@ NTSTATUS ReadDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
+/*This function is called when you write to the device*/
 NTSTATUS WriteDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
 	DbgPrint("Not implemented yet :( ! \n");
@@ -121,13 +116,15 @@ NTSTATUS WriteDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
+/*This function is called when you close the device*/
 NTSTATUS CloseDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	DbgPrint("Drviver Close Called ! \n");
+	LogInfo("Terminating VMX...");
 
-	// executing VMXOFF on every logical processor
-	VMX_Terminate();
-
+	// Terminating Vmx
+	BMHV_Terminate_Vmx();
+	LogInfo("VMX Operation turned off successfully :)");
+	
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -135,10 +132,10 @@ NTSTATUS CloseDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
-
+//Not implemented major functions of the device
 NTSTATUS UnsupportedDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	DbgPrint("This function is not supported :( ! \n");
+	//DbgPrint("This function is not supported :( ! \n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -147,7 +144,7 @@ NTSTATUS UnsupportedDriver(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
-
+//IOCTL communications
 NTSTATUS IOCTLDispatcherDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 /*++
@@ -168,12 +165,17 @@ Return Value:
 	ULONG               inBufLength; // Input buffer length
 	ULONG               outBufLength; // Output buffer length
 	PVOID               inBuf, outBuf; // pointer to Input and output buffer
-	WCHAR*              data = L"Hi, this is a message from the Device Driver.";
+	WCHAR data[200];
+	PCHAR msgData = "Hi, this is a message from the Device Driver.";
 	PCHAR				sentData = "Hi, this is a message from the Device Driver.";
-	size_t              datalen = 120;
+	size_t              datalen = 500;
 	//size_t              datalen = strlen(data) + 1;//Length of data including null
 	PMDL                mdl = NULL;
 	PVOID               buffer = NULL;
+
+	for (int i = 0; i < strlen(msgData); i++) {
+		data[i] = *(msgData + i);
+	}
 
 	UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -198,7 +200,7 @@ Return Value:
 	case IOCTL_METHOD_BUFFERED:
 
 		DbgPrint("\nUsing IOCTL METHOD_BUFFERED transfer type\n");
-		PrintIrpInfo(Irp);
+		//PrintIrpInfo(Irp);
 
 		//
 		// Input buffer and output buffer is same in this case, read the
@@ -212,32 +214,44 @@ Return Value:
 		// Read the data from the buffer
 		//
 
-		DbgPrint("\tData received from User : ");
+		//DbgPrint("\tData received from User : ");
 		//
 		// We are using the following function to print characters instead
 		// DebugPrint with %s format because we string we get may or
 		// may not be null terminated.
 		//
-		DbgPrint(inBuf);
-		DbgPrint("\n");
+		//DbgPrint(inBuf);
+		//DbgPrint("\n");
 		//PrintChars(inBuf, inBufLength);
 
 		//
 		// Write to the buffer over-writes the input buffer content
 		//
 
-		RtlCopyBytes(outBuf, data, outBufLength);
+		//RtlCopyBytes(outBuf, data, outBufLength);
 		//wcsncpy(outBuf, data, outBufLength);
-		DbgPrint(("\tData sent to User : "));
-		DbgPrint(sentData);
-		DbgPrint("\n");
+		//DbgPrint(("\tData sent to User : "));
+		//DbgPrint(sentData);
+		//DbgPrint("\n");
 
 		//
 		// Assign the length of the data copied to IoStatus.Information
 		// of the Irp and complete the Irp.
 		//
 
-		Irp->IoStatus.Information = (outBufLength < datalen ? outBufLength : datalen);
+		DbgPrint("Secret msg : ");
+		for (int i = 0; i < secretDataLength; i++) {
+			DbgPrint("%c", SecretData[i]);
+		}
+		DbgPrint("end\n");
+
+		DbgPrint("msg len : %d\n", secretDataLength);
+		Irp->IoStatus.Information = (secretDataLength < 1000 ? secretDataLength : 1000);
+		RtlCopyBytes(outBuf, SecretData, secretDataLength);
+		RtlZeroBytes(SecretData, secretDataLength);
+		secretDataLength = 0;
+
+		//Irp->IoStatus.Information = (outBufLength < datalen ? outBufLength : datalen);
 
 		//
 		// When the Irp is completed the content of the SystemBuffer
@@ -260,7 +274,7 @@ Return Value:
 
 		DbgPrint("\nUsing IOCTL METHOD_IN_DIRECT transfer type\n\n");
 
-		PrintIrpInfo(Irp);
+		//PrintIrpInfo(Irp);
 
 		inBuf = Irp->AssociatedIrp.SystemBuffer;
 
@@ -307,7 +321,7 @@ Return Value:
 
 		DbgPrint("\nUsing IOCTL METHOD_OUT_DIRECT transfer type\n");
 
-		PrintIrpInfo(Irp);
+		//PrintIrpInfo(Irp);
 
 		inBuf = Irp->AssociatedIrp.SystemBuffer;
 
@@ -328,13 +342,34 @@ Return Value:
 		// Write data to be sent to the user in this buffer
 		//
 
-		RtlCopyBytes(buffer, data, outBufLength);
+		//RtlCopyBytes(buffer, data, outBufLength);
+		
+		/*DbgPrint("Secret msg : ");
+		for (int i = 0; i < secretDataLength; i++) {
+			DbgPrint("%c", SecretData[i]);
+		}
+		DbgPrint("end\n");
+		*/
 
-		DbgPrint("\tData sent to User : ");
+		DbgPrint("Data sent\n");
+		DbgPrint("msg len : %d\n", secretDataLength);
+		
+		int temp = secretDataLength;
+		for (int i = 0; i < temp+ 3 && secretDataLength<998; i++) {
+			SecretData[secretDataLength] = ' ';
+			secretDataLength += 1;
+		}
+		
+		
+		Irp->IoStatus.Information = (secretDataLength < 1000 ? secretDataLength : 1000);
+		RtlCopyBytes(buffer, SecretData, secretDataLength);
+		RtlZeroBytes(SecretData,secretDataLength);
+		secretDataLength = 0;
+		//DbgPrint("\tData sent to User : ");
 		//PrintChars(buffer, datalen);
-		DbgPrint(sentData);
-		DbgPrint("\n");
-		Irp->IoStatus.Information = (outBufLength < datalen ? outBufLength : datalen);
+		//DbgPrint(sentData);
+		//DbgPrint("\n");
+		
 
 		//
 		// NOTE: Changes made to the  SystemBuffer are not copied
@@ -345,205 +380,205 @@ Return Value:
 
 	case IOCTL_METHOD_NEITHER:
 
+		//
+		// In this type of transfer the I/O manager assigns the user input
+		// to Type3InputBuffer and the output buffer to UserBuffer of the Irp.
+		// The I/O manager doesn't copy or map the buffers to the kernel
+		// buffers. Nor does it perform any validation of user buffer's address
+		// range.
+		//
+
+
+		DbgPrint("\nUsing IOCTL METHOD_NEITHER transfer type\n");
+
+		//PrintIrpInfo(Irp);
+
+		//
+		// A driver may access these buffers directly if it is a highest level
+		// driver whose Dispatch routine runs in the context
+		// of the thread that made this request. The driver should always
+		// check the validity of the user buffer's address range and check whether
+		// the appropriate read or write access is permitted on the buffer.
+		// It must also wrap its accesses to the buffer's address range within
+		// an exception handler in case another user thread deallocates the buffer
+		// or attempts to change the access rights for the buffer while the driver
+		// is accessing memory.
+		//
+
+		inBuf = irpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+		outBuf = Irp->UserBuffer;
+
+		//
+		// Access the buffers directly if only if you are running in the
+		// context of the calling process. Only top level drivers are
+		// guaranteed to have the context of process that made the request.
+		//
+
+		try {
 			//
-			// In this type of transfer the I/O manager assigns the user input
-			// to Type3InputBuffer and the output buffer to UserBuffer of the Irp.
-			// The I/O manager doesn't copy or map the buffers to the kernel
-			// buffers. Nor does it perform any validation of user buffer's address
-			// range.
+			// Before accessing user buffer, you must probe for read/write
+			// to make sure the buffer is indeed an userbuffer with proper access
+			// rights and length. ProbeForRead/Write will raise an exception if it's otherwise.
 			//
-
-
-			DbgPrint("\nUsing IOCTL METHOD_NEITHER transfer type\n");
-
-			PrintIrpInfo(Irp);
-
-			//
-			// A driver may access these buffers directly if it is a highest level
-			// driver whose Dispatch routine runs in the context
-			// of the thread that made this request. The driver should always
-			// check the validity of the user buffer's address range and check whether
-			// the appropriate read or write access is permitted on the buffer.
-			// It must also wrap its accesses to the buffer's address range within
-			// an exception handler in case another user thread deallocates the buffer
-			// or attempts to change the access rights for the buffer while the driver
-			// is accessing memory.
-			//
-
-			inBuf = irpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-			outBuf = Irp->UserBuffer;
-
-			//
-			// Access the buffers directly if only if you are running in the
-			// context of the calling process. Only top level drivers are
-			// guaranteed to have the context of process that made the request.
-			//
-
-			try {
-				//
-				// Before accessing user buffer, you must probe for read/write
-				// to make sure the buffer is indeed an userbuffer with proper access
-				// rights and length. ProbeForRead/Write will raise an exception if it's otherwise.
-				//
-				ProbeForRead(inBuf, inBufLength, sizeof(UCHAR));
-
-				//
-				// Since the buffer access rights can be changed or buffer can be freed
-				// anytime by another thread of the same process, you must always access
-				// it within an exception handler.
-				//
-
-				DbgPrint("\tData from User :");
-				DbgPrint(inBuf);
-				DbgPrint("\n");
-				//PrintChars(inBuf, inBufLength);
-
-			}
-			except(EXCEPTION_EXECUTE_HANDLER)
-			{
-
-				ntStatus = GetExceptionCode();
-				DbgPrint(
-					"Exception while accessing inBuf 0X%08X in METHOD_NEITHER\n",
-					ntStatus);
-				break;
-			}
-
+			ProbeForRead(inBuf, inBufLength, sizeof(UCHAR));
 
 			//
-			// If you are accessing these buffers in an arbitrary thread context,
-			// say in your DPC or ISR, if you are using it for DMA, or passing these buffers to the
-			// next level driver, you should map them in the system process address space.
-			// First allocate an MDL large enough to describe the buffer
-			// and initilize it. Please note that on a x86 system, the maximum size of a buffer
-			// that an MDL can describe is 65508 KB.
+			// Since the buffer access rights can be changed or buffer can be freed
+			// anytime by another thread of the same process, you must always access
+			// it within an exception handler.
 			//
 
-			mdl = IoAllocateMdl(inBuf, inBufLength, FALSE, TRUE, NULL);
-			if (!mdl)
-			{
-				ntStatus = STATUS_INSUFFICIENT_RESOURCES;
-				break;
-			}
-
-			try
-			{
-
-				//
-				// Probe and lock the pages of this buffer in physical memory.
-				// You can specify IoReadAccess, IoWriteAccess or IoModifyAccess
-				// Always perform this operation in a try except block.
-				//  MmProbeAndLockPages will raise an exception if it fails.
-				//
-				MmProbeAndLockPages(mdl, UserMode, IoReadAccess);
-			}
-			except(EXCEPTION_EXECUTE_HANDLER)
-			{
-
-				ntStatus = GetExceptionCode();
-				//DbgPrint(("Exception while locking inBuf 0X%08X in METHOD_NEITHER\n",ntStatus));
-				IoFreeMdl(mdl);
-				break;
-			}
-
-			//
-			// Map the physical pages described by the MDL into system space.
-			// Note: double mapping the buffer this way causes lot of
-			// system overhead for large size buffers.
-			//
-
-			buffer = MmGetSystemAddressForMdlSafe(mdl, NormalPagePriority | MdlMappingNoExecute);
-
-			if (!buffer) {
-				ntStatus = STATUS_INSUFFICIENT_RESOURCES;
-				MmUnlockPages(mdl);
-				IoFreeMdl(mdl);
-				break;
-			}
-
-			//
-			// Now you can safely read the data from the buffer.
-			//
-			
-			//DbgPrint("\tData from User (SystemAddress) : ");
-			//DbgPrint(buffer);
-			
-			//PrintChars(buffer, inBufLength);
-
-			//
-			// Once the read is over unmap and unlock the pages.
-			//
-
-			MmUnlockPages(mdl);
-			IoFreeMdl(mdl);
-
-			//
-			// The same steps can be followed to access the output buffer.
-			//
-
-			mdl = IoAllocateMdl(outBuf, outBufLength, FALSE, TRUE, NULL);
-			if (!mdl)
-			{
-				ntStatus = STATUS_INSUFFICIENT_RESOURCES;
-				break;
-			}
-
-
-			try {
-				//
-				// Probe and lock the pages of this buffer in physical memory.
-				// You can specify IoReadAccess, IoWriteAccess or IoModifyAccess.
-				//
-
-				MmProbeAndLockPages(mdl, UserMode, IoWriteAccess);
-			}
-			except(EXCEPTION_EXECUTE_HANDLER)
-			{
-
-				ntStatus = GetExceptionCode();
-				DbgPrint(
-					"Exception while locking outBuf 0X%08X in METHOD_NEITHER\n",
-					ntStatus);
-				IoFreeMdl(mdl);
-				break;
-			}
-
-
-			buffer = MmGetSystemAddressForMdlSafe(mdl, NormalPagePriority | MdlMappingNoExecute);
-
-			if (!buffer) {
-				MmUnlockPages(mdl);
-				IoFreeMdl(mdl);
-				ntStatus = STATUS_INSUFFICIENT_RESOURCES;
-				break;
-			}
-			//
-			// Write to the buffer
-			//
-
-			RtlCopyBytes(buffer, data, outBufLength);
-
-			DbgPrint("\tData sent to User : ");
-			DbgPrint(sentData);
+			DbgPrint("\tData from User :");
+			DbgPrint(inBuf);
 			DbgPrint("\n");
-			//PrintChars(buffer, datalen);
+			//PrintChars(inBuf, inBufLength);
 
-			MmUnlockPages(mdl);
+		}
+		except(EXCEPTION_EXECUTE_HANDLER)
+		{
 
-			//
-			// Free the allocated MDL
-			//
-
-			IoFreeMdl(mdl);
-
-			//
-			// Assign the length of the data copied to IoStatus.Information
-			// of the Irp and complete the Irp.
-			//
-
-			Irp->IoStatus.Information = (outBufLength < datalen ? outBufLength : datalen);
-
+			ntStatus = GetExceptionCode();
+			DbgPrint(
+				"Exception while accessing inBuf 0X%08X in METHOD_NEITHER\n",
+				ntStatus);
 			break;
+		}
+
+
+		//
+		// If you are accessing these buffers in an arbitrary thread context,
+		// say in your DPC or ISR, if you are using it for DMA, or passing these buffers to the
+		// next level driver, you should map them in the system process address space.
+		// First allocate an MDL large enough to describe the buffer
+		// and initilize it. Please note that on a x86 system, the maximum size of a buffer
+		// that an MDL can describe is 65508 KB.
+		//
+
+		mdl = IoAllocateMdl(inBuf, inBufLength, FALSE, TRUE, NULL);
+		if (!mdl)
+		{
+			ntStatus = STATUS_INSUFFICIENT_RESOURCES;
+			break;
+		}
+
+		try
+		{
+
+			//
+			// Probe and lock the pages of this buffer in physical memory.
+			// You can specify IoReadAccess, IoWriteAccess or IoModifyAccess
+			// Always perform this operation in a try except block.
+			//  MmProbeAndLockPages will raise an exception if it fails.
+			//
+			MmProbeAndLockPages(mdl, UserMode, IoReadAccess);
+		}
+		except(EXCEPTION_EXECUTE_HANDLER)
+		{
+
+			ntStatus = GetExceptionCode();
+			//DbgPrint(("Exception while locking inBuf 0X%08X in METHOD_NEITHER\n",ntStatus));
+			IoFreeMdl(mdl);
+			break;
+		}
+
+		//
+		// Map the physical pages described by the MDL into system space.
+		// Note: double mapping the buffer this way causes lot of
+		// system overhead for large size buffers.
+		//
+
+		buffer = MmGetSystemAddressForMdlSafe(mdl, NormalPagePriority | MdlMappingNoExecute);
+
+		if (!buffer) {
+			ntStatus = STATUS_INSUFFICIENT_RESOURCES;
+			MmUnlockPages(mdl);
+			IoFreeMdl(mdl);
+			break;
+		}
+
+		//
+		// Now you can safely read the data from the buffer.
+		//
+
+		//DbgPrint("\tData from User (SystemAddress) : ");
+		//DbgPrint(buffer);
+
+		//PrintChars(buffer, inBufLength);
+
+		//
+		// Once the read is over unmap and unlock the pages.
+		//
+
+		MmUnlockPages(mdl);
+		IoFreeMdl(mdl);
+
+		//
+		// The same steps can be followed to access the output buffer.
+		//
+
+		mdl = IoAllocateMdl(outBuf, outBufLength, FALSE, TRUE, NULL);
+		if (!mdl)
+		{
+			ntStatus = STATUS_INSUFFICIENT_RESOURCES;
+			break;
+		}
+
+
+		try {
+			//
+			// Probe and lock the pages of this buffer in physical memory.
+			// You can specify IoReadAccess, IoWriteAccess or IoModifyAccess.
+			//
+
+			MmProbeAndLockPages(mdl, UserMode, IoWriteAccess);
+		}
+		except(EXCEPTION_EXECUTE_HANDLER)
+		{
+
+			ntStatus = GetExceptionCode();
+			DbgPrint(
+				"Exception while locking outBuf 0X%08X in METHOD_NEITHER\n",
+				ntStatus);
+			IoFreeMdl(mdl);
+			break;
+		}
+
+
+		buffer = MmGetSystemAddressForMdlSafe(mdl, NormalPagePriority | MdlMappingNoExecute);
+
+		if (!buffer) {
+			MmUnlockPages(mdl);
+			IoFreeMdl(mdl);
+			ntStatus = STATUS_INSUFFICIENT_RESOURCES;
+			break;
+		}
+		//
+		// Write to the buffer
+		//
+
+		RtlCopyBytes(buffer, data, outBufLength);
+
+		DbgPrint("\tData sent to User : ");
+		DbgPrint(sentData);
+		DbgPrint("\n");
+		//PrintChars(buffer, datalen);
+
+		MmUnlockPages(mdl);
+
+		//
+		// Free the allocated MDL
+		//
+
+		IoFreeMdl(mdl);
+
+		//
+		// Assign the length of the data copied to IoStatus.Information
+		// of the Irp and complete the Irp.
+		//
+
+		Irp->IoStatus.Information = (outBufLength < datalen ? outBufLength : datalen);
+
+		break;
 
 	default:
 
@@ -568,26 +603,4 @@ End:
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	return ntStatus;
-}
-
-
-
-VOID PrintIrpInfo(PIRP Irp)
-{
-	PIO_STACK_LOCATION  irpSp;
-	irpSp = IoGetCurrentIrpStackLocation(Irp);
-
-	PAGED_CODE();
-
-	DbgPrint("\tIrp->AssociatedIrp.SystemBuffer = 0x%p\n",
-		Irp->AssociatedIrp.SystemBuffer);
-	DbgPrint("\tIrp->UserBuffer = 0x%p\n", Irp->UserBuffer);
-	DbgPrint("\tirpSp->Parameters.DeviceIoControl.Type3InputBuffer = 0x%p\n",
-		irpSp->Parameters.DeviceIoControl.Type3InputBuffer);
-	DbgPrint("\tirpSp->Parameters.DeviceIoControl.InputBufferLength = %d\n",
-		irpSp->Parameters.DeviceIoControl.InputBufferLength);
-	DbgPrint("\tirpSp->Parameters.DeviceIoControl.OutputBufferLength = %d\n",
-		irpSp->Parameters.DeviceIoControl.OutputBufferLength);
-	DbgPrint("\n");
-	return;
 }

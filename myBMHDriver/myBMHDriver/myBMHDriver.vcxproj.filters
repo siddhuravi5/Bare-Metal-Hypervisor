@@ -22,21 +22,33 @@
     <ClCompile Include="BMHDriver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LogicalProcessor.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VMX.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Memory.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EPT.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BMHV_Routines.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VMX_Regions_Manager.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VMCall_Handler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Invept_Instruction_Handler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NMI_Interrupts.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BMHDriver_CPU.h">
+    <ClInclude Include="Helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MSR.h">
@@ -48,12 +60,45 @@
     <ClInclude Include="VMX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="VMCall_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Invept_Instruction_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InlineAsm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BMHV_Routines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Global_Variables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dpc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NMI_Interrupts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="Assembly.asm">
+    <MASM Include="Assembly_Common.asm">
       <Filter>Source Files</Filter>
     </MASM>
-    <MASM Include="VirtualMachineExitHandler.asm">
+    <MASM Include="Assembly_EPT.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="Assembly_Segment_Registers.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="Assembly_VMExit_Handler.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="Assembly_VMX_Context_State.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="Assembly_VMX_Operation.asm">
       <Filter>Source Files</Filter>
     </MASM>
   </ItemGroup>

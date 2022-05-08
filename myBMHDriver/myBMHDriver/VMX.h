@@ -1,21 +1,26 @@
 #pragma once
 #include <ntddk.h>
-#include "EPT.h"
+#include "Ept.h"
 
-typedef struct _VirtualMachineState
-{
-	UINT64 VMXON_REGION;                        // VMXON region
-	UINT64 VMCS_REGION;                         // VMCS region
-	UINT64 EPTP;								// Extended-Page-Table Pointer
-	UINT64 VMM_Stack;							// Stack for VMM in VM-Exit State
-	UINT64 MSRBitMap;							// MSRBitMap Virtual Address
-	UINT64 MSRBitMapPhysical;					// MSRBitMap Physical Address
-} VirtualMachineState, * PVirtualMachineState;
+// VMCS Region Size
+#define VMCS_SIZE   4096
+
+// VMXON Region Size
+
+#define VMXON_SIZE   4096
+
+ULONG ExitReason;
+
+UINT64 gGuestRSP;
+UINT64 gGuestRIP;
+
+UINT64 gCR3_Target_Count;
 
 //debug test - fixed now
 #define SEGMENT_DESCRIPTOR_TYPE_TSS_AVAILABLE                        0x00000009
 #define SEGMENT_DESCRIPTOR_TYPE_TSS_BUSY                             0x0000000B
 
+/*
 union __segment_access_rights_t
 {
 	struct
@@ -45,7 +50,8 @@ union __segment_selector_t
 	};
 	unsigned __int16 flags;
 };
-
+*/
+/*
 struct __segment_descriptor_64_t
 {
 	unsigned __int16 segment_limit_low;
@@ -231,7 +237,7 @@ union __vmx_secondary_processor_based_control_t
 		unsigned __int64 use_tsc_scaling : 1;
 	} bits;
 };
-
+*/
 
 // PIN-Based Execution
 #define PIN_BASED_VM_EXECUTION_CONTROLS_EXTERNAL_INTERRUPT        0x00000001
@@ -263,6 +269,9 @@ union __vmx_secondary_processor_based_control_t
 #define CPU_BASED_PAUSE_EXITING               0x40000000
 #define CPU_BASED_ACTIVATE_SECONDARY_CONTROLS 0x80000000
 
+#define CPU_BASED_CTL2_ENABLE_INVPCID					0x1000
+#define CPU_BASED_CTL2_ENABLE_XSAVE_XRSTORS				0x100000
+
 #define CPU_BASED_CTL2_ENABLE_EPT			0x2
 #define CPU_BASED_CTL2_RDTSCP				0x8
 #define CPU_BASED_CTL2_ENABLE_VPID			0x20
@@ -285,6 +294,23 @@ union __vmx_secondary_processor_based_control_t
 #define VM_ENTRY_SMM                    0x00000400
 #define VM_ENTRY_DEACT_DUAL_MONITOR     0x00000800
 #define VM_ENTRY_LOAD_GUEST_PAT         0x00004000
+
+#define HYPERV_CPUID_VENDOR_AND_MAX_FUNCTIONS   0x40000000
+#define HYPERV_CPUID_INTERFACE                  0x40000001
+#define HYPERV_CPUID_VERSION                    0x40000002
+#define HYPERV_CPUID_FEATURES                   0x40000003
+#define HYPERV_CPUID_ENLIGHTMENT_INFO           0x40000004
+#define HYPERV_CPUID_IMPLEMENT_LIMITS           0x40000005
+
+#define HYPERV_HYPERVISOR_PRESENT_BIT           0x80000000
+#define HYPERV_CPUID_MIN                        0x40000005
+#define HYPERV_CPUID_MAX                        0x4000ffff
+
+// Exit Qualifications for MOV for Control Register Access
+#define TYPE_MOV_TO_CR              0
+#define TYPE_MOV_FROM_CR            1
+#define TYPE_CLTS                   2
+#define TYPE_LMSW                   3
 
 
 enum VMCS_FIELDS {
@@ -432,6 +458,8 @@ enum VMCS_FIELDS {
 	HOST_IA32_PAT				=	0x00002c00,
 	HOST_IA32_EFER				=	0x00002c02,
 	HOST_IA32_PERF_GLOBAL_CTRL	=	0x00002c04,
+
+	VM_ENTRY_INTR_INFO = 0x00004016,
 };
 
 
@@ -497,46 +525,123 @@ enum VMCS_FIELDS {
 #define EXIT_REASON_PCOMMIT             65
 
 
-extern PVirtualMachineState vmState;
 
 extern UINT64 VirtualGuestMemoryAddress;
-
 extern int ProcessorCounts;
-
-#define POOLTAG 0x48564653 // [H]yper[V]isor [F]rom [S]cratch (HVFS)
-#define VMM_STACK_SIZE      0x8000
-#define RPL_MASK                3
-
 ULONG ExitReason;
 
-void VMX_Initiate(void);
-void VMX_Terminate(void);
-UINT64 VirtualAddress_to_PhysicalAddress(void* va);
-PVOID PhysicalAddress_to_VirtualAddress(UINT64 pa);
-BOOLEAN Allocate_VMXON_Region(IN PVirtualMachineState vmState);
-BOOLEAN Allocate_VMCS_Region(IN PVirtualMachineState vmState);
-UINT64 VMPTRST(void);
-void Run_On_Each_Logical_Processor(void* (*FunctionPtr)());
-int ipow(int base, int exp);
-void Inline_Memory_Patcher(void);
-extern ULONG64 inline Get_GDT_Base(void);
-extern ULONG64 inline Get_IDT_Base(void);
-extern void inline Enable_VMX_Operation_asm(void);
-extern void inline  Restore_To_VMXOFF_State_asm();
-extern void inline  Save_VMXOFF_State_asm();
-extern unsigned char inline INVEPT_Instruction(_In_ unsigned long type, _In_ void* descriptor);
-BOOLEAN Check_VMX_Support();
-VOID VM_Exit_Handler_asm(VOID);
-void VM_Launch(int ProcessorID, PEPTP EPTP);
-BOOLEAN VMCS_Setup(IN PVirtualMachineState vmState, IN PEPTP EPTP);
-BOOLEAN VMCS_Load(IN PVirtualMachineState vmState);
-BOOLEAN VMCS_Clear_State(IN PVirtualMachineState vmState);
-VOID VM_Resumer(VOID);
+#define POOLTAG 0x48564653 // [H]yper[V]isor [F]rom [S]cratch (HVFS)
+#define VMM_STACK_SIZE      0x12000
+#define RPL_MASK                3
 
-//debug text - fixed now
-static unsigned __int64 vmx_adjust_cv(unsigned int capability_msr, unsigned __int64 value);
-void vmx_adjust_pinbased_controls(union __vmx_pinbased_control_msr_t* exit_controls);
-static void vmx_adjust_exit_controls(union __vmx_exit_control_t* exit_controls);
-static void vmx_adjust_entry_controls(union __vmx_entry_control_t* entry_controls);
-static unsigned __int64 get_segment_base(unsigned __int64 gdt_base, unsigned __int16 segment_selector);
-static unsigned __int32 read_segment_access_rights(unsigned __int16 segment_selector);
+//////////////////////////////////////////////////
+//			 Structures & Unions				//
+//////////////////////////////////////////////////
+
+
+typedef struct _VMX_VMXOFF_STATE
+{
+	BOOLEAN IsVmxoffExecuted;					// Shows whether the VMXOFF executed or not
+	UINT64  GuestRip;							// Rip address of guest to return
+	UINT64  GuestRsp;							// Rsp address of guest to return
+
+} VMX_VMXOFF_STATE, * PVMX_VMXOFF_STATE;
+
+typedef struct _VMX_NON_ROOT_MODE_MEMORY_ALLOCATOR
+{
+	PVOID PreAllocatedBuffer;		// As we can't use ExAllocatePoolWithTag in VMX Root mode, this holds a pre-allocated buffer address
+									// PreAllocatedBuffer == 0 indicates that it's not previously allocated
+} VMX_NON_ROOT_MODE_MEMORY_ALLOCATOR, * PVMX_NON_ROOT_MODE_MEMORY_ALLOCATOR;
+
+
+
+typedef struct _VIRTUAL_MACHINE_STATE
+{
+	BOOLEAN IsOnVmxRootMode;										// Detects whether the current logical core is on Executing on VMX Root Mode
+	BOOLEAN IncrementRip;											// Checks whether it has to redo the previous instruction or not (it used mainly in Ept routines)
+	UINT64 VmxonRegionPhysicalAddress;								// Vmxon region physical address
+	UINT64 VmxonRegionVirtualAddress;							    // VMXON region virtual address
+	UINT64 VmcsRegionPhysicalAddress;								// VMCS region physical address
+	UINT64 VmcsRegionVirtualAddress;								// VMCS region virtual address
+	UINT64 VmmStack;												// Stack for VMM in VM-Exit State
+	UINT64 MsrBitmapVirtualAddress;									// Msr Bitmap Virtual Address
+	UINT64 MsrBitmapPhysicalAddress;								// Msr Bitmap Physical Address
+	VMX_VMXOFF_STATE VmxoffState;									// Shows the vmxoff state of the guest
+	VMX_NON_ROOT_MODE_MEMORY_ALLOCATOR PreAllocatedMemoryDetails;	// The details of pre-allocated memory
+	UINT64 IOBitmapVirtualAddressA;
+	UINT64 IOBitmapPhysicalAddressA;
+	UINT64 IOBitmapVirtualAddressB;
+	UINT64 IOBitmapPhysicalAddressB;
+
+} VIRTUAL_MACHINE_STATE, * PVIRTUAL_MACHINE_STATE;
+
+
+typedef struct _VMX_EXIT_QUALIFICATION_IO_INSTRUCTION
+{
+	union
+	{
+		ULONG64 Flags;
+
+		struct
+		{
+			ULONG64 SizeOfAccess : 3;
+			ULONG64 AccessType : 1;
+			ULONG64 StringInstruction : 1;
+			ULONG64 RepPrefixed : 1;
+			ULONG64 OperandEncoding : 1;
+			ULONG64 Reserved1 : 9;
+			ULONG64 PortNumber : 16;
+		};
+	};
+} VMX_EXIT_QUALIFICATION_IO_INSTRUCTION, * PVMX_EXIT_QUALIFICATION_IO_INSTRUCTION;
+
+typedef union _MOV_CR_QUALIFICATION
+{
+	ULONG_PTR All;
+	struct
+	{
+		ULONG ControlRegister : 4;
+		ULONG AccessType : 2;
+		ULONG LMSWOperandType : 1;
+		ULONG Reserved1 : 1;
+		ULONG Register : 4;
+		ULONG Reserved2 : 4;
+		ULONG LMSWSourceData : 16;
+		ULONG Reserved3;
+	} Fields;
+} MOV_CR_QUALIFICATION, * PMOV_CR_QUALIFICATION;
+
+
+
+//////////////////////////////////////////////////
+//					Functions					//
+//////////////////////////////////////////////////
+
+// Initialize VMX Operation
+BOOLEAN Initialize_VMX();
+
+// Terminate VMX Operation
+BOOLEAN Terminate_VMX();
+
+// Allocate VMX Regions
+BOOLEAN Vmx_Allocate_Vmxon_Region(VIRTUAL_MACHINE_STATE* CurrentGuestState);
+BOOLEAN Vmx_Allocate_Vmcs_Region(VIRTUAL_MACHINE_STATE* CurrentGuestState);
+BOOLEAN Vmx_Allocate_Vmm_Stack(INT ProcessorID);
+BOOLEAN Vmx_Allocate_MSR_Bitmap(INT ProcessorID);
+BOOLEAN Vmx_Allocate_IO_Bitmap(INT ProcessorID);
+
+// VMX Instructions
+VOID Vmx_Vmptrst();
+VOID Vmx_VMResume();
+VOID Vmx_Vmxoff();
+
+BOOLEAN Vmx_Load_Vmcs(VIRTUAL_MACHINE_STATE* CurrentGuestState);
+BOOLEAN Vmx_Clear_Vmcs_State(VIRTUAL_MACHINE_STATE* CurrentGuestState);
+
+// Virtualize an already running machine 
+BOOLEAN Vmx_Virtualize_Current_System(PVOID GuestStack);
+
+// Configure VMCS
+BOOLEAN Vmx_Setup_Vmcs(VIRTUAL_MACHINE_STATE* CurrentGuestState, PVOID GuestStack);
+VOID ApplyHookAfterMTF();
+
